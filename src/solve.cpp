@@ -18,7 +18,7 @@ struct Options {
   int iterations;
 };
 
-template <class T> void run(Options opt) {
+template <class T> bool run(Options opt) {
 
   Eigen::SparseMatrix<T> A;
 
@@ -32,8 +32,15 @@ template <class T> void run(Options opt) {
 
   Vector x = solver.compute(A).solve(b);
 
- double error=(A*x-b).norm()/b.norm();
-  std::cout<<"iterations:"<<solver.iterations()<<" error"<<solver.error()<<" real error:"<<error<<" succes:"<<solver.info()<<std::endl;
+  double error = (A * x - b).norm() / b.norm();
+  std::cout << "iterations:" << solver.iterations() << " error"
+            << solver.error() << " real error:" << error << " success:"
+            << std::string((solver.info() == Eigen::ComputationInfo::Success)
+                               ? "true"
+                               : "false")
+            << std::endl;
+
+    return (solver.info() == Eigen::ComputationInfo::Success);
 }
 
 int main(int argc, char *argv[]) {
@@ -91,7 +98,7 @@ int main(int argc, char *argv[]) {
   if (!foundfile) {
     throw std::runtime_error("File " + opt.b_filename + " not found.");
   }
-  if (isvector) {
+  if (!isvector) {
     throw std::runtime_error("File " + opt.b_filename +
                              " contains a matrix not a vector.");
   }
@@ -100,9 +107,11 @@ int main(int argc, char *argv[]) {
     throw std::runtime_error(
         "Both files have to have the same datatype complex or real");
   }
+  bool error;
   if (complexMatrix) {
-    run<std::complex<double>>(opt);
+    error=run<std::complex<double>>(opt);
   } else {
-    run<double>(opt);
+    error=run<double>(opt);
   }
+  return error;
 }
